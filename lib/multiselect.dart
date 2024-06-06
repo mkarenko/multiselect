@@ -109,6 +109,9 @@ class DropDownMultiSelect<T> extends StatefulWidget {
   /// clear values button at the end of list
   final bool clearButton;
 
+  /// Clear button text value;
+  final String clearButtonText;
+
   /// style for the selected values
   final TextStyle? selectedValuesStyle;
 
@@ -127,6 +130,7 @@ class DropDownMultiSelect<T> extends StatefulWidget {
     this.isDense = true,
     this.enabled = true,
     this.clearButton = false,
+    this.clearButtonText = '',
     this.decoration,
     this.validator,
     this.readOnly = false,
@@ -186,8 +190,8 @@ class _DropDownMultiSelectState<TState>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              IconButton(
-                icon: Icon(Icons.clear),
+              TextButton(
+                child: Text(widget.clearButtonText),
                 onPressed: () {
                   widget.onChanged([]);
                 },
