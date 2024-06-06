@@ -140,6 +140,65 @@ class _DropDownMultiSelectState<TState>
     extends State<DropDownMultiSelect<TState>> {
   @override
   Widget build(BuildContext context) {
+    List<DropdownMenuItem<TState>> dropdownItems = widget.options.map(
+      (x) {
+        return DropdownMenuItem<TState>(
+          child: _theState.rebuild(() {
+            return widget.menuItembuilder != null
+                ? widget.menuItembuilder!(x)
+                : _SelectRow(
+                    selected: widget.selectedValues.contains(x),
+                    text: x.toString(),
+                    onChange: (isSelected) {
+                      if (isSelected) {
+                        var ns = widget.selectedValues;
+                        ns.add(x);
+                        widget.onChanged(ns);
+                      } else {
+                        var ns = widget.selectedValues;
+                        ns.remove(x);
+                        widget.onChanged(ns);
+                      }
+                    },
+                  );
+          }),
+          value: x,
+          onTap: !widget.readOnly
+              ? () {
+                  if (widget.selectedValues.contains(x)) {
+                    var ns = widget.selectedValues;
+                    ns.remove(x);
+                    widget.onChanged(ns);
+                  } else {
+                    var ns = widget.selectedValues;
+                    ns.add(x);
+                    widget.onChanged(ns);
+                  }
+                }
+              : null,
+        );
+      },
+    ).toList();
+
+    if (widget.clearButton) {
+      dropdownItems.add(
+        DropdownMenuItem<TState>(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                icon: Icon(Icons.clear),
+                onPressed: () {
+                  widget.onChanged([]);
+                },
+              ),
+            ],
+          ),
+          value: null,
+        ),
+      );
+    }
+
     return Container(
       child: Stack(
         alignment: Alignment.centerLeft,
@@ -173,58 +232,9 @@ class _DropDownMultiSelectState<TState>
                         ))
                     .toList();
               },
-              items: widget.options
-                  .map(
-                    (x) => DropdownMenuItem<TState>(
-                      child: _theState.rebuild(() {
-                        return widget.menuItembuilder != null
-                            ? widget.menuItembuilder!(x)
-                            : _SelectRow(
-                                selected: widget.selectedValues.contains(x),
-                                text: x.toString(),
-                                onChange: (isSelected) {
-                                  if (isSelected) {
-                                    var ns = widget.selectedValues;
-                                    ns.add(x);
-                                    widget.onChanged(ns);
-                                  } else {
-                                    var ns = widget.selectedValues;
-                                    ns.remove(x);
-                                    widget.onChanged(ns);
-                                  }
-                                },
-                              );
-                      }),
-                      value: x,
-                      onTap: !widget.readOnly
-                          ? () {
-                              if (widget.selectedValues.contains(x)) {
-                                var ns = widget.selectedValues;
-                                ns.remove(x);
-                                widget.onChanged(ns);
-                              } else {
-                                var ns = widget.selectedValues;
-                                ns.add(x);
-                                widget.onChanged(ns);
-                              }
-                            }
-                          : null,
-                    ),
-                  )
-                  .toList(),
+              items: dropdownItems,
             ),
           ),
-          if (widget.clearButton)
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: IconButton(
-                icon: Icon(Icons.clear),
-                onPressed: () {
-                  widget.onChanged([]);
-                },
-              ),
-            ),
           _theState.rebuild(() => widget.childBuilder != null
               ? widget.childBuilder!(widget.selectedValues)
               : Padding(
