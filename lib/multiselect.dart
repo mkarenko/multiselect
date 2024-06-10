@@ -59,7 +59,10 @@ class _SelectRow extends StatelessWidget {
   }
 }
 
+///
 /// A Dropdown multiselect menu
+///
+///
 class DropDownMultiSelect<T> extends StatefulWidget {
   /// The options form which a user can select
   final List<T> options;
@@ -105,7 +108,9 @@ class DropDownMultiSelect<T> extends StatefulWidget {
 
   /// clear values button at the end of list
   final bool clearButton;
-  final String? clearButtonText;
+
+  /// Clear button text value;
+  final String clearButtonText;
 
   /// style for the selected values
   final TextStyle? selectedValuesStyle;
@@ -125,7 +130,7 @@ class DropDownMultiSelect<T> extends StatefulWidget {
     this.isDense = true,
     this.enabled = true,
     this.clearButton = false,
-    this.clearButtonText,
+    this.clearButtonText = '',
     this.decoration,
     this.validator,
     this.readOnly = false,
@@ -139,56 +144,52 @@ class _DropDownMultiSelectState<TState>
     extends State<DropDownMultiSelect<TState>> {
   @override
   Widget build(BuildContext context) {
-    // Create a list of DropdownMenuItems from widget.options
-    List<DropdownMenuItem<TState>> items = widget.options
-        .map(
-          (x) => DropdownMenuItem<TState>(
-            child: _theState.rebuild(() {
-              return widget.menuItembuilder != null
-                  ? widget.menuItembuilder!(x)
-                  : _SelectRow(
-                      selected: widget.selectedValues.contains(x),
-                      text: x.toString(),
-                      onChange: (isSelected) {
-                        if (isSelected) {
-                          var ns = widget.selectedValues;
-                          ns.add(x);
-                          widget.onChanged(ns);
-                        } else {
-                          var ns = widget.selectedValues;
-                          ns.remove(x);
-                          widget.onChanged(ns);
-                        }
-                      },
-                    );
-            }),
-            value: x,
-            onTap: !widget.readOnly
-                ? () {
-                    if (widget.selectedValues.contains(x)) {
-                      var ns = widget.selectedValues;
-                      ns.remove(x);
-                      widget.onChanged(ns);
-                    } else {
-                      var ns = widget.selectedValues;
-                      ns.add(x);
-                      widget.onChanged(ns);
-                    }
+    List<DropdownMenuItem<TState>> dropdownItems = widget.options.map(
+      (x) {
+        return DropdownMenuItem<TState>(
+          child: _theState.rebuild(() {
+            return widget.menuItembuilder != null
+                ? widget.menuItembuilder!(x)
+                : _SelectRow(
+                    selected: widget.selectedValues.contains(x),
+                    text: x.toString(),
+                    onChange: (isSelected) {
+                      if (isSelected) {
+                        var ns = widget.selectedValues;
+                        ns.add(x);
+                        widget.onChanged(ns);
+                      } else {
+                        var ns = widget.selectedValues;
+                        ns.remove(x);
+                        widget.onChanged(ns);
+                      }
+                    },
+                  );
+          }),
+          value: x,
+          onTap: !widget.readOnly
+              ? () {
+                  if (widget.selectedValues.contains(x)) {
+                    var ns = widget.selectedValues;
+                    ns.remove(x);
+                    widget.onChanged(ns);
+                  } else {
+                    var ns = widget.selectedValues;
+                    ns.add(x);
+                    widget.onChanged(ns);
                   }
-                : null,
-          ),
-        )
-        .toList();
+                }
+              : null,
+        );
+      },
+    ).toList();
 
-    // Conditionally add the clear option to the list
     if (widget.clearButton) {
-      items.insert(
-        0,
+      dropdownItems.add(
         DropdownMenuItem<TState>(
           value: null,
           child: Text(
-            widget.clearButtonText!,
-            style: TextStyle(color: Colors.grey),
+            widget.clearButtonText,
           ),
         ),
       );
@@ -217,7 +218,7 @@ class _DropDownMultiSelectState<TState>
               isDense: widget.isDense,
               onChanged: widget.enabled ? (x) {} : null,
               isExpanded: false,
-              value: widget.selectedValues.isNotEmpty
+              value: widget.selectedValues.length > 0
                   ? widget.selectedValues[0]
                   : null,
               selectedItemBuilder: (context) {
@@ -227,17 +228,9 @@ class _DropDownMultiSelectState<TState>
                         ))
                     .toList();
               },
-              items: items, // Use the updated items list
+              items: dropdownItems,
             ),
           ),
-          if (widget.clearButton)
-            DropdownMenuItem<TState>(
-              value: null,
-              child: Text(
-                widget.clearButtonText!,
-                style: TextStyle(color: Colors.grey),
-              ),
-            ),
           _theState.rebuild(() => widget.childBuilder != null
               ? widget.childBuilder!(widget.selectedValues)
               : Padding(
@@ -249,7 +242,7 @@ class _DropDownMultiSelectState<TState>
                   child: Padding(
                     padding: const EdgeInsets.only(right: 20),
                     child: Text(
-                      widget.selectedValues.isNotEmpty
+                      widget.selectedValues.length > 0
                           ? widget.selectedValues
                               .map((e) => e.toString())
                               .reduce(
