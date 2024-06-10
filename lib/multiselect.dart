@@ -109,9 +109,6 @@ class DropDownMultiSelect<T> extends StatefulWidget {
   /// clear values button at the end of list
   final bool clearButton;
 
-  /// Clear button text value;
-  final String clearButtonText;
-
   /// style for the selected values
   final TextStyle? selectedValuesStyle;
 
@@ -130,7 +127,6 @@ class DropDownMultiSelect<T> extends StatefulWidget {
     this.isDense = true,
     this.enabled = true,
     this.clearButton = false,
-    this.clearButtonText = '',
     this.decoration,
     this.validator,
     this.readOnly = false,
@@ -144,65 +140,6 @@ class _DropDownMultiSelectState<TState>
     extends State<DropDownMultiSelect<TState>> {
   @override
   Widget build(BuildContext context) {
-    List<DropdownMenuItem<TState>> dropdownItems = widget.options.map(
-      (x) {
-        return DropdownMenuItem<TState>(
-          child: _theState.rebuild(() {
-            return widget.menuItembuilder != null
-                ? widget.menuItembuilder!(x)
-                : _SelectRow(
-                    selected: widget.selectedValues.contains(x),
-                    text: x.toString(),
-                    onChange: (isSelected) {
-                      if (isSelected) {
-                        var ns = widget.selectedValues;
-                        ns.add(x);
-                        widget.onChanged(ns);
-                      } else {
-                        var ns = widget.selectedValues;
-                        ns.remove(x);
-                        widget.onChanged(ns);
-                      }
-                    },
-                  );
-          }),
-          value: x,
-          onTap: !widget.readOnly
-              ? () {
-                  if (widget.selectedValues.contains(x)) {
-                    var ns = widget.selectedValues;
-                    ns.remove(x);
-                    widget.onChanged(ns);
-                  } else {
-                    var ns = widget.selectedValues;
-                    ns.add(x);
-                    widget.onChanged(ns);
-                  }
-                }
-              : null,
-        );
-      },
-    ).toList();
-
-    if (widget.clearButton) {
-      dropdownItems.add(
-        DropdownMenuItem<TState>(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                child: Text(widget.clearButtonText),
-                onPressed: () {
-                  widget.onChanged([]);
-                },
-              ),
-            ],
-          ),
-          value: null,
-        ),
-      );
-    }
-
     return Container(
       child: Stack(
         alignment: Alignment.centerLeft,
@@ -236,9 +173,58 @@ class _DropDownMultiSelectState<TState>
                         ))
                     .toList();
               },
-              items: dropdownItems,
+              items: widget.options
+                  .map(
+                    (x) => DropdownMenuItem<TState>(
+                      child: _theState.rebuild(() {
+                        return widget.menuItembuilder != null
+                            ? widget.menuItembuilder!(x)
+                            : _SelectRow(
+                                selected: widget.selectedValues.contains(x),
+                                text: x.toString(),
+                                onChange: (isSelected) {
+                                  if (isSelected) {
+                                    var ns = widget.selectedValues;
+                                    ns.add(x);
+                                    widget.onChanged(ns);
+                                  } else {
+                                    var ns = widget.selectedValues;
+                                    ns.remove(x);
+                                    widget.onChanged(ns);
+                                  }
+                                },
+                              );
+                      }),
+                      value: x,
+                      onTap: !widget.readOnly
+                          ? () {
+                              if (widget.selectedValues.contains(x)) {
+                                var ns = widget.selectedValues;
+                                ns.remove(x);
+                                widget.onChanged(ns);
+                              } else {
+                                var ns = widget.selectedValues;
+                                ns.add(x);
+                                widget.onChanged(ns);
+                              }
+                            }
+                          : null,
+                    ),
+                  )
+                  .toList(),
             ),
           ),
+          if (widget.clearButton)
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: IconButton(
+                icon: Icon(Icons.clear),
+                onPressed: () {
+                  widget.onChanged([]);
+                },
+              ),
+            ),
           _theState.rebuild(() => widget.childBuilder != null
               ? widget.childBuilder!(widget.selectedValues)
               : Padding(
