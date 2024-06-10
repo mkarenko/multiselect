@@ -158,6 +158,9 @@ class _DropDownMultiSelectState<TState>
                         var ns = widget.selectedValues;
                         ns.add(x);
                         widget.onChanged(ns);
+                      } else if (widget.selectedValues
+                          .contains(widget.clearButtonText)) {
+                        widget.selectedValues.clear();
                       } else {
                         var ns = widget.selectedValues;
                         ns.remove(x);
