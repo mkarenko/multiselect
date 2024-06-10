@@ -59,10 +59,7 @@ class _SelectRow extends StatelessWidget {
   }
 }
 
-///
 /// A Dropdown multiselect menu
-///
-///
 class DropDownMultiSelect<T> extends StatefulWidget {
   /// The options form which a user can select
   final List<T> options;
@@ -109,6 +106,9 @@ class DropDownMultiSelect<T> extends StatefulWidget {
   /// clear values button at the end of list
   final bool clearButton;
 
+  /// clear button widget element
+  final Widget? clearButtonWidget;
+
   /// style for the selected values
   final TextStyle? selectedValuesStyle;
 
@@ -127,6 +127,7 @@ class DropDownMultiSelect<T> extends StatefulWidget {
     this.isDense = true,
     this.enabled = true,
     this.clearButton = false,
+    this.clearButtonWidget,
     this.decoration,
     this.validator,
     this.readOnly = false,
@@ -214,17 +215,7 @@ class _DropDownMultiSelectState<TState>
                   .toList(),
             ),
           ),
-          if (widget.clearButton)
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: IconButton(
-                icon: Icon(Icons.clear),
-                onPressed: () {
-                  widget.onChanged([]);
-                },
-              ),
-            ),
+          if (widget.clearButton) widget.clearButtonWidget!,
           _theState.rebuild(() => widget.childBuilder != null
               ? widget.childBuilder!(widget.selectedValues)
               : Padding(
