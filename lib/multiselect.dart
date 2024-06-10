@@ -163,9 +163,6 @@ class _DropDownMultiSelectState<TState>
                         var ns = widget.selectedValues;
                         ns.add(x);
                         widget.onChanged(ns);
-                      } else if (widget.selectedValues
-                          .contains(widget.clearButtonText)) {
-                        widget.selectedValues.clear();
                       } else {
                         var ns = widget.selectedValues;
                         ns.remove(x);
@@ -182,7 +179,10 @@ class _DropDownMultiSelectState<TState>
                     ns.remove(x);
                     widget.onChanged(ns);
                   } else if (x == null) {
-                    widget.onChanged([]);
+                    var ns = widget.selectedValues;
+                    ns.clear();
+                    print('cleard');
+
                     Navigator.of(context).pop();
                   } else {
                     var ns = widget.selectedValues;
