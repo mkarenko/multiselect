@@ -175,12 +175,15 @@ class _DropDownMultiSelectState<TState>
                   );
           }),
           value: x,
-          onTap: !widget.readOnly
+          onTap: widget.enabled
               ? () {
                   if (widget.selectedValues.contains(x)) {
                     var ns = widget.selectedValues;
                     ns.remove(x);
                     widget.onChanged(ns);
+                  } else if (x == null) {
+                    widget.onChanged([]);
+                    Navigator.of(context).pop();
                   } else {
                     var ns = widget.selectedValues;
                     ns.add(x);
