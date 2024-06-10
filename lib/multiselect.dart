@@ -7,6 +7,11 @@ class _TheState {}
 
 var _theState = RM.inject(() => _TheState());
 
+const colorBlue = Color(0xFF2154A6);
+const colorRed = Color(0xFFFF0016);
+const colorGray = Color(0xFF707070);
+const colorBlueText = Color(0xCC2154A6);
+
 class RowWrapper extends InheritedWidget {
   final dynamic data;
   final bool Function() shouldNotify;
@@ -107,7 +112,7 @@ class DropDownMultiSelect<T> extends StatefulWidget {
   final Widget? hint;
 
   /// clear values button at the end of list
-  final bool clearButton;
+  final bool clearOption;
 
   /// Clear button text value;
   final String clearButtonText;
@@ -129,7 +134,7 @@ class DropDownMultiSelect<T> extends StatefulWidget {
     this.menuItembuilder,
     this.isDense = true,
     this.enabled = true,
-    this.clearButton = false,
+    this.clearOption = false,
     this.clearButtonText = '',
     this.decoration,
     this.validator,
@@ -187,12 +192,17 @@ class _DropDownMultiSelectState<TState>
       },
     ).toList();
 
-    if (widget.clearButton) {
+    if (widget.clearOption) {
       dropdownItems.add(
         DropdownMenuItem<TState>(
           value: null,
-          child: Text(
-            widget.clearButtonText,
+          child: Row(
+            children: [
+              const Icon(Icons.clear, color: colorRed, size: 16),
+              const SizedBox(width: 5),
+              Text(widget.clearButtonText,
+                  style: const TextStyle(color: colorBlueText)),
+            ],
           ),
         ),
       );
