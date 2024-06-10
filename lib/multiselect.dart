@@ -179,11 +179,12 @@ class _DropDownMultiSelectState<TState>
                     ns.remove(x);
                     widget.onChanged(ns);
                   } else if (x == null) {
-                    var ns = widget.selectedValues;
-                    ns.clear();
-                    print('cleard');
+                    setState(() {
+                      widget.onChanged([]);
+                    });
 
                     Navigator.of(context).pop();
+                    print('cleared');
                   } else {
                     var ns = widget.selectedValues;
                     ns.add(x);
