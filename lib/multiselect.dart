@@ -49,7 +49,7 @@ class _SelectRow extends StatelessWidget {
           children: [
             if (clearButton) ...[
               Padding(
-                padding: EdgeInsets.only(left: 10),
+                padding: EdgeInsets.only(left: 14, right: 6),
                 child: Row(children: [
                   const Icon(Icons.clear, color: Colors.red, size: 16),
                   const SizedBox(width: 5)
