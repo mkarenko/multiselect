@@ -26,12 +26,14 @@ class _SelectRow extends StatelessWidget {
   final Function(bool) onChange;
   final bool selected;
   final String text;
+  final bool clearOption;
 
   const _SelectRow(
       {Key? key,
       required this.onChange,
       required this.selected,
-      required this.text})
+      required this.text,
+      this.clearOption = false})
       : super(key: key);
 
   @override
@@ -45,13 +47,17 @@ class _SelectRow extends StatelessWidget {
         height: kMinInteractiveDimension,
         child: Row(
           children: [
+            if (clearOption) ...[
+              const Icon(Icons.clear, color: Colors.red, size: 16),
+              const SizedBox(width: 5),
+            ],
             Checkbox(
                 value: selected,
                 onChanged: (x) {
                   onChange(x!);
                   _theState.notify();
                 }),
-            Text(text, style: const TextStyle(color: Color(0xFF2154A6)))
+            Text(text)
           ],
         ),
       ),
@@ -109,8 +115,6 @@ class DropDownMultiSelect<T> extends StatefulWidget {
   /// clear values button at the end of list
   final bool clearButton;
 
-  final String? clearButtonText;
-
   /// style for the selected values
   final TextStyle? selectedValuesStyle;
 
@@ -129,7 +133,6 @@ class DropDownMultiSelect<T> extends StatefulWidget {
     this.isDense = true,
     this.enabled = true,
     this.clearButton = false,
-    this.clearButtonText,
     this.decoration,
     this.validator,
     this.readOnly = false,
@@ -152,20 +155,21 @@ class _DropDownMultiSelectState<TState>
               hint: widget.hint,
               style: widget.hintStyle,
               icon: widget.icon,
-              validator: widget.validator,
-              decoration: widget.decoration ??
-                  InputDecoration(
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 15,
-                      horizontal: 10,
+              validator: widget.validator != null ? widget.validator : null,
+              decoration: widget.decoration != null
+                  ? widget.decoration
+                  : InputDecoration(
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: 15,
+                        horizontal: 10,
+                      ),
                     ),
-                  ),
               isDense: widget.isDense,
               onChanged: widget.enabled ? (x) {} : null,
               isExpanded: false,
-              value: widget.selectedValues.isNotEmpty
+              value: widget.selectedValues.length > 0
                   ? widget.selectedValues[0]
                   : null,
               selectedItemBuilder: (context) {
@@ -175,70 +179,46 @@ class _DropDownMultiSelectState<TState>
                         ))
                     .toList();
               },
-              items: widget.options.asMap().entries.map(
-                (entry) {
-                  int index = entry.key;
-                  TState x = entry.value;
-
-                  if (widget.clearButton &&
-                      index == widget.options.length - 1) {
-                    return DropdownMenuItem<TState>(
-                      child: InkWell(
-                        onTap: () {
-                          widget.onChanged([]);
-                          _theState.notify();
-                        },
-                        child: Row(
-                          children: [
-                            const Icon(Icons.clear,
-                                color: Colors.red, size: 16),
-                            const SizedBox(width: 5),
-                            Text(widget.clearButtonText!,
-                                style: const TextStyle(color: Colors.blue)),
-                          ],
-                        ),
-                      ),
+              items: widget.options
+                  .map(
+                    (x) => DropdownMenuItem<TState>(
+                      child: _theState.rebuild(() {
+                        return widget.menuItembuilder != null
+                            ? widget.menuItembuilder!(x)
+                            : _SelectRow(
+                                clearOption: widget.clearButton,
+                                selected: widget.selectedValues.contains(x),
+                                text: x.toString(),
+                                onChange: (isSelected) {
+                                  if (isSelected) {
+                                    var ns = widget.selectedValues;
+                                    ns.add(x);
+                                    widget.onChanged(ns);
+                                  } else {
+                                    var ns = widget.selectedValues;
+                                    ns.remove(x);
+                                    widget.onChanged(ns);
+                                  }
+                                },
+                              );
+                      }),
                       value: x,
-                    );
-                  }
-
-                  return DropdownMenuItem<TState>(
-                    child: _theState.rebuild(() {
-                      return widget.menuItembuilder != null
-                          ? widget.menuItembuilder!(x)
-                          : _SelectRow(
-                              selected: widget.selectedValues.contains(x),
-                              text: x.toString(),
-                              onChange: (isSelected) {
-                                if (isSelected) {
-                                  var ns = widget.selectedValues;
-                                  ns.add(x);
-                                  widget.onChanged(ns);
-                                } else {
-                                  var ns = widget.selectedValues;
-                                  ns.remove(x);
-                                  widget.onChanged(ns);
-                                }
-                              },
-                            );
-                    }),
-                    value: x,
-                    onTap: !widget.readOnly
-                        ? () {
-                            if (widget.selectedValues.contains(x)) {
-                              var ns = widget.selectedValues;
-                              ns.remove(x);
-                              widget.onChanged(ns);
-                            } else {
-                              var ns = widget.selectedValues;
-                              ns.add(x);
-                              widget.onChanged(ns);
+                      onTap: !widget.readOnly
+                          ? () {
+                              if (widget.selectedValues.contains(x)) {
+                                var ns = widget.selectedValues;
+                                ns.remove(x);
+                                widget.onChanged(ns);
+                              } else {
+                                var ns = widget.selectedValues;
+                                ns.add(x);
+                                widget.onChanged(ns);
+                              }
                             }
-                          }
-                        : null,
-                  );
-                },
-              ).toList(),
+                          : null,
+                    ),
+                  )
+                  .toList(),
             ),
           ),
           if (widget.clearButton)
@@ -252,26 +232,26 @@ class _DropDownMultiSelectState<TState>
                 },
               ),
             ),
-          _theState.rebuild(
-            () => widget.childBuilder != null
-                ? widget.childBuilder!(widget.selectedValues)
-                : Padding(
-                    padding: widget.decoration?.contentPadding ??
-                        EdgeInsets.symmetric(horizontal: 10),
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 20),
-                      child: Text(
-                        widget.selectedValues.isNotEmpty
-                            ? widget.selectedValues
-                                .map((e) => e.toString())
-                                .reduce((a, b) =>
-                                    a.toString() + ' , ' + b.toString())
-                            : widget.whenEmpty ?? '',
-                        style: widget.selectedValuesStyle,
-                      ),
+          _theState.rebuild(() => widget.childBuilder != null
+              ? widget.childBuilder!(widget.selectedValues)
+              : Padding(
+                  padding: widget.decoration != null
+                      ? widget.decoration!.contentPadding != null
+                          ? widget.decoration!.contentPadding!
+                          : EdgeInsets.symmetric(horizontal: 10)
+                      : EdgeInsets.symmetric(horizontal: 20),
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 20),
+                    child: Text(
+                      widget.selectedValues.length > 0
+                          ? widget.selectedValues
+                              .map((e) => e.toString())
+                              .reduce(
+                                  (a, b) => a.toString() + ' , ' + b.toString())
+                          : widget.whenEmpty ?? '',
+                      style: widget.selectedValuesStyle,
                     ),
-                  ),
-          ),
+                  ))),
         ],
       ),
     );
