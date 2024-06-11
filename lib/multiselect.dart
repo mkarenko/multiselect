@@ -51,12 +51,13 @@ class _SelectRow extends StatelessWidget {
               const Icon(Icons.clear, color: Colors.red, size: 16),
               const SizedBox(width: 5),
             ],
-            Checkbox(
-                value: selected,
-                onChanged: (x) {
-                  onChange(x!);
-                  _theState.notify();
-                }),
+            if (!clearOption)
+              Checkbox(
+                  value: selected,
+                  onChanged: (x) {
+                    onChange(x!);
+                    _theState.notify();
+                  }),
             Text(text)
           ],
         ),
