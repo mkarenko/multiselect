@@ -47,15 +47,17 @@ class _SelectRow extends StatelessWidget {
         height: kMinInteractiveDimension,
         child: Row(
           children: [
-            clearButton
-                ? Icon(Icons.clear, color: Colors.red, size: 16)
-                : Checkbox(
-                    value: selected,
-                    onChanged: (x) {
-                      onChange(x!);
-                      _theState.notify();
-                    },
-                  ),
+            if (clearButton) ...[
+              const Icon(Icons.clear, color: Colors.red, size: 16),
+              const SizedBox(width: 5)
+            ] else
+              Checkbox(
+                value: selected,
+                onChanged: (x) {
+                  onChange(x!);
+                  _theState.notify();
+                },
+              ),
             Text(text)
           ],
         ),
@@ -63,10 +65,6 @@ class _SelectRow extends StatelessWidget {
     );
   }
 }
-
-// const Icon(Icons.clear,
-// color: CustomColors.red, size: 16),
-// const SizedBox(width: 5),
 
 ///
 /// A Dropdown multiselect menu
@@ -232,17 +230,6 @@ class _DropDownMultiSelectState<TState>
                   .toList(),
             ),
           ),
-          if (widget.clearButton)
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: IconButton(
-                icon: Icon(Icons.clear),
-                onPressed: () {
-                  widget.onChanged([]);
-                },
-              ),
-            ),
           _theState.rebuild(() => widget.childBuilder != null
               ? widget.childBuilder!(widget.selectedValues)
               : Padding(
