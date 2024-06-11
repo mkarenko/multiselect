@@ -7,11 +7,6 @@ class _TheState {}
 
 var _theState = RM.inject(() => _TheState());
 
-const colorBlue = Color(0xFF2154A6);
-const colorRed = Color(0xFFFF0016);
-const colorGray = Color(0xFF707070);
-const colorBlueText = Color(0xCC2154A6);
-
 class RowWrapper extends InheritedWidget {
   final dynamic data;
   final bool Function() shouldNotify;
@@ -56,7 +51,7 @@ class _SelectRow extends StatelessWidget {
                   onChange(x!);
                   _theState.notify();
                 }),
-            Text(text)
+            Text(text, style: const TextStyle(color: Color(0xFF2154A6)))
           ],
         ),
       ),
@@ -112,10 +107,9 @@ class DropDownMultiSelect<T> extends StatefulWidget {
   final Widget? hint;
 
   /// clear values button at the end of list
-  final bool clearOption;
+  final bool clearButton;
 
-  /// Clear button text value;
-  final String clearButtonText;
+  final String? clearButtonText;
 
   /// style for the selected values
   final TextStyle? selectedValuesStyle;
@@ -134,8 +128,8 @@ class DropDownMultiSelect<T> extends StatefulWidget {
     this.menuItembuilder,
     this.isDense = true,
     this.enabled = true,
-    this.clearOption = false,
-    this.clearButtonText = '',
+    this.clearButton = false,
+    this.clearButtonText,
     this.decoration,
     this.validator,
     this.readOnly = false,
@@ -149,69 +143,6 @@ class _DropDownMultiSelectState<TState>
     extends State<DropDownMultiSelect<TState>> {
   @override
   Widget build(BuildContext context) {
-    List<DropdownMenuItem<TState>> dropdownItems = widget.options.map(
-      (x) {
-        return DropdownMenuItem<TState>(
-          child: _theState.rebuild(() {
-            return widget.menuItembuilder != null
-                ? widget.menuItembuilder!(x)
-                : _SelectRow(
-                    selected: widget.selectedValues.contains(x),
-                    text: x.toString(),
-                    onChange: (isSelected) {
-                      if (isSelected) {
-                        var ns = widget.selectedValues;
-                        ns.add(x);
-                        widget.onChanged(ns);
-                      } else {
-                        var ns = widget.selectedValues;
-                        ns.remove(x);
-                        widget.onChanged(ns);
-                      }
-                    },
-                  );
-          }),
-          value: x,
-          onTap: widget.enabled
-              ? () {
-                  if (widget.selectedValues.contains(x)) {
-                    var ns = widget.selectedValues;
-                    ns.remove(x);
-                    widget.onChanged(ns);
-                  } else if (x == null) {
-                    setState(() {
-                      widget.onChanged([]);
-                    });
-
-                    Navigator.of(context).pop();
-                    print('cleared');
-                  } else {
-                    var ns = widget.selectedValues;
-                    ns.add(x);
-                    widget.onChanged(ns);
-                  }
-                }
-              : null,
-        );
-      },
-    ).toList();
-
-    if (widget.clearOption) {
-      dropdownItems.add(
-        DropdownMenuItem<TState>(
-          value: null,
-          child: Row(
-            children: [
-              const Icon(Icons.clear, color: colorRed, size: 16),
-              const SizedBox(width: 5),
-              Text(widget.clearButtonText,
-                  style: const TextStyle(color: colorBlueText)),
-            ],
-          ),
-        ),
-      );
-    }
-
     return Container(
       child: Stack(
         alignment: Alignment.centerLeft,
@@ -221,21 +152,20 @@ class _DropDownMultiSelectState<TState>
               hint: widget.hint,
               style: widget.hintStyle,
               icon: widget.icon,
-              validator: widget.validator != null ? widget.validator : null,
-              decoration: widget.decoration != null
-                  ? widget.decoration
-                  : InputDecoration(
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(
-                        vertical: 15,
-                        horizontal: 10,
-                      ),
+              validator: widget.validator,
+              decoration: widget.decoration ??
+                  InputDecoration(
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: 15,
+                      horizontal: 10,
                     ),
+                  ),
               isDense: widget.isDense,
               onChanged: widget.enabled ? (x) {} : null,
               isExpanded: false,
-              value: widget.selectedValues.length > 0
+              value: widget.selectedValues.isNotEmpty
                   ? widget.selectedValues[0]
                   : null,
               selectedItemBuilder: (context) {
@@ -245,29 +175,103 @@ class _DropDownMultiSelectState<TState>
                         ))
                     .toList();
               },
-              items: dropdownItems,
+              items: widget.options.asMap().entries.map(
+                (entry) {
+                  int index = entry.key;
+                  TState x = entry.value;
+
+                  if (widget.clearButton &&
+                      index == widget.options.length - 1) {
+                    return DropdownMenuItem<TState>(
+                      child: InkWell(
+                        onTap: () {
+                          widget.onChanged([]);
+                          _theState.notify();
+                        },
+                        child: Row(
+                          children: [
+                            const Icon(Icons.clear,
+                                color: Colors.red, size: 16),
+                            const SizedBox(width: 5),
+                            Text(widget.clearButtonText!,
+                                style: const TextStyle(color: Colors.blue)),
+                          ],
+                        ),
+                      ),
+                      value: x,
+                    );
+                  }
+
+                  return DropdownMenuItem<TState>(
+                    child: _theState.rebuild(() {
+                      return widget.menuItembuilder != null
+                          ? widget.menuItembuilder!(x)
+                          : _SelectRow(
+                              selected: widget.selectedValues.contains(x),
+                              text: x.toString(),
+                              onChange: (isSelected) {
+                                if (isSelected) {
+                                  var ns = widget.selectedValues;
+                                  ns.add(x);
+                                  widget.onChanged(ns);
+                                } else {
+                                  var ns = widget.selectedValues;
+                                  ns.remove(x);
+                                  widget.onChanged(ns);
+                                }
+                              },
+                            );
+                    }),
+                    value: x,
+                    onTap: !widget.readOnly
+                        ? () {
+                            if (widget.selectedValues.contains(x)) {
+                              var ns = widget.selectedValues;
+                              ns.remove(x);
+                              widget.onChanged(ns);
+                            } else {
+                              var ns = widget.selectedValues;
+                              ns.add(x);
+                              widget.onChanged(ns);
+                            }
+                          }
+                        : null,
+                  );
+                },
+              ).toList(),
             ),
           ),
-          _theState.rebuild(() => widget.childBuilder != null
-              ? widget.childBuilder!(widget.selectedValues)
-              : Padding(
-                  padding: widget.decoration != null
-                      ? widget.decoration!.contentPadding != null
-                          ? widget.decoration!.contentPadding!
-                          : EdgeInsets.symmetric(horizontal: 10)
-                      : EdgeInsets.symmetric(horizontal: 20),
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 20),
-                    child: Text(
-                      widget.selectedValues.length > 0
-                          ? widget.selectedValues
-                              .map((e) => e.toString())
-                              .reduce(
-                                  (a, b) => a.toString() + ' , ' + b.toString())
-                          : widget.whenEmpty ?? '',
-                      style: widget.selectedValuesStyle,
+          if (widget.clearButton)
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: IconButton(
+                icon: Icon(Icons.clear),
+                onPressed: () {
+                  widget.onChanged([]);
+                },
+              ),
+            ),
+          _theState.rebuild(
+            () => widget.childBuilder != null
+                ? widget.childBuilder!(widget.selectedValues)
+                : Padding(
+                    padding: widget.decoration?.contentPadding ??
+                        EdgeInsets.symmetric(horizontal: 10),
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 20),
+                      child: Text(
+                        widget.selectedValues.isNotEmpty
+                            ? widget.selectedValues
+                                .map((e) => e.toString())
+                                .reduce((a, b) =>
+                                    a.toString() + ' , ' + b.toString())
+                            : widget.whenEmpty ?? '',
+                        style: widget.selectedValuesStyle,
+                      ),
                     ),
-                  ))),
+                  ),
+          ),
         ],
       ),
     );
