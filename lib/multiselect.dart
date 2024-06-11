@@ -26,15 +26,15 @@ class _SelectRow extends StatelessWidget {
   final Function(bool) onChange;
   final bool selected;
   final String text;
-  final bool clearOption;
+  final bool clearButton;
 
-  const _SelectRow(
-      {Key? key,
-      required this.onChange,
-      required this.selected,
-      required this.text,
-      this.clearOption = false})
-      : super(key: key);
+  const _SelectRow({
+    Key? key,
+    required this.onChange,
+    required this.selected,
+    required this.text,
+    required this.clearButton, // <-- added this line
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -47,16 +47,15 @@ class _SelectRow extends StatelessWidget {
         height: kMinInteractiveDimension,
         child: Row(
           children: [
-            if (clearOption) ...[
-              const Icon(Icons.clear, color: Colors.red, size: 16),
-              const SizedBox(width: 5),
-            ] else
-              Checkbox(
-                  value: selected,
-                  onChanged: (x) {
-                    onChange(x!);
-                    _theState.notify();
-                  }),
+            clearButton
+                ? Icon(Icons.clear, color: Colors.red, size: 16)
+                : Checkbox(
+                    value: selected,
+                    onChanged: (x) {
+                      onChange(x!);
+                      _theState.notify();
+                    },
+                  ),
             Text(text)
           ],
         ),
@@ -64,6 +63,10 @@ class _SelectRow extends StatelessWidget {
     );
   }
 }
+
+// const Icon(Icons.clear,
+// color: CustomColors.red, size: 16),
+// const SizedBox(width: 5),
 
 ///
 /// A Dropdown multiselect menu
@@ -180,44 +183,52 @@ class _DropDownMultiSelectState<TState>
                     .toList();
               },
               items: widget.options
+                  .asMap()
                   .map(
-                    (x) => DropdownMenuItem<TState>(
-                      child: _theState.rebuild(() {
-                        return widget.menuItembuilder != null
-                            ? widget.menuItembuilder!(x)
-                            : _SelectRow(
-                                clearOption: widget.clearButton,
-                                selected: widget.selectedValues.contains(x),
-                                text: x.toString(),
-                                onChange: (isSelected) {
-                                  if (isSelected) {
-                                    var ns = widget.selectedValues;
-                                    ns.add(x);
-                                    widget.onChanged(ns);
-                                  } else {
-                                    var ns = widget.selectedValues;
-                                    ns.remove(x);
-                                    widget.onChanged(ns);
-                                  }
-                                },
-                              );
-                      }),
-                      value: x,
-                      onTap: !widget.readOnly
-                          ? () {
-                              if (widget.selectedValues.contains(x)) {
-                                var ns = widget.selectedValues;
-                                ns.remove(x);
-                                widget.onChanged(ns);
-                              } else {
-                                var ns = widget.selectedValues;
-                                ns.add(x);
-                                widget.onChanged(ns);
+                    (index, x) => MapEntry(
+                      index,
+                      DropdownMenuItem<TState>(
+                        child: _theState.rebuild(() {
+                          return widget.menuItembuilder != null
+                              ? widget.menuItembuilder!(x)
+                              : _SelectRow(
+                                  selected: widget.selectedValues.contains(x),
+                                  text: x.toString(),
+                                  onChange: (isSelected) {
+                                    if (isSelected) {
+                                      var ns = widget.selectedValues;
+                                      ns.add(x);
+                                      widget.onChanged(ns);
+                                    } else {
+                                      var ns = widget.selectedValues;
+                                      ns.remove(x);
+                                      widget.onChanged(ns);
+                                    }
+                                  },
+                                  clearButton: widget.clearButton &&
+                                      index ==
+                                          widget.options.length -
+                                              1, // <-- added this line
+                                );
+                        }),
+                        value: x,
+                        onTap: !widget.readOnly
+                            ? () {
+                                if (widget.selectedValues.contains(x)) {
+                                  var ns = widget.selectedValues;
+                                  ns.remove(x);
+                                  widget.onChanged(ns);
+                                } else {
+                                  var ns = widget.selectedValues;
+                                  ns.add(x);
+                                  widget.onChanged(ns);
+                                }
                               }
-                            }
-                          : null,
+                            : null,
+                      ),
                     ),
                   )
+                  .values
                   .toList(),
             ),
           ),
