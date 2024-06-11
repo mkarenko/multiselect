@@ -50,8 +50,7 @@ class _SelectRow extends StatelessWidget {
             if (clearOption) ...[
               const Icon(Icons.clear, color: Colors.red, size: 16),
               const SizedBox(width: 5),
-            ],
-            if (!clearOption)
+            ] else
               Checkbox(
                   value: selected,
                   onChanged: (x) {
