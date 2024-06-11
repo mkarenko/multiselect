@@ -48,8 +48,13 @@ class _SelectRow extends StatelessWidget {
         child: Row(
           children: [
             if (clearButton) ...[
-              const Icon(Icons.clear, color: Colors.red, size: 16),
-              const SizedBox(width: 5)
+              Padding(
+                padding: EdgeInsets.only(left: 10),
+                child: Row(children: [
+                  const Icon(Icons.clear, color: Colors.red, size: 16),
+                  const SizedBox(width: 5)
+                ]),
+              )
             ] else
               Checkbox(
                 value: selected,
